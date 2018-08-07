@@ -1,0 +1,55 @@
+diff --git a/Signal/Signal-Info.plist b/Signal/Signal-Info.plist
+index cd17c4326..2bfafd982 100644
+--- a/Signal/Signal-Info.plist
++++ b/Signal/Signal-Info.plist
+@@ -53,6 +53,11 @@
+ 	<dict>
+ 		<key>NSExceptionDomains</key>
+ 		<dict>
++			<key>localhost</key>
++			<dict>
++				<key>NSExceptionAllowsInsecureHTTPLoads</key>
++				<true/>
++			</dict>
+ 			<key>amazonaws.com</key>
+ 			<dict>
+ 				<key>NSIncludesSubdomains</key>
+@@ -83,7 +88,7 @@
+ 	<key>NSContactsUsageDescription</key>
+ 	<string>Signal uses your contacts to find users you know. We do not store your contacts on the server.</string>
+ 	<key>NSFaceIDUsageDescription</key>
+-	<string>Signal's Screen Lock uses Face ID.</string>
++	<string>Signal&apos;s Screen Lock uses Face ID.</string>
+ 	<key>NSMicrophoneUsageDescription</key>
+ 	<string>Signal needs access to your microphone to make and receive phone calls and record voice messages.</string>
+ 	<key>NSPhotoLibraryAddUsageDescription</key>
+diff --git a/SignalServiceKit/src/TSConstants.h b/SignalServiceKit/src/TSConstants.h
+index 375f09609..701b357a8 100644
+--- a/SignalServiceKit/src/TSConstants.h
++++ b/SignalServiceKit/src/TSConstants.h
+@@ -28,13 +28,20 @@ typedef NS_ENUM(NSInteger, TSWhisperMessageType) {
+ 
+ //#ifndef DEBUG
+ 
++#define textSecureWebSocketAPI @"wss://localhost:8080/v1/websocket/"
++#define textSecureServerURL @"http://localhost:8080/"
++#define textSecureCDNServerURL @"http://localhost:8080/"
++// Use same reflector for service and CDN
++#define textSecureServiceReflectorHost @"localhost"
++#define textSecureCDNReflectorHost @"localhost"
++
+ // Production
+-#define textSecureWebSocketAPI @"wss://textsecure-service.whispersystems.org/v1/websocket/"
+-#define textSecureServerURL @"https://textsecure-service.whispersystems.org/"
+-#define textSecureCDNServerURL @"https://cdn.signal.org"
++//#define textSecureWebSocketAPI @"wss://textsecure-service.whispersystems.org/v1/websocket/"
++//#define textSecureServerURL @"https://textsecure-service.whispersystems.org/"
++//#define textSecureCDNServerURL @"https://cdn.signal.org"
+ // Use same reflector for service and CDN
+-#define textSecureServiceReflectorHost @"textsecure-service-reflected.whispersystems.org"
+-#define textSecureCDNReflectorHost @"textsecure-service-reflected.whispersystems.org"
++//#define textSecureServiceReflectorHost @"textsecure-service-reflected.whispersystems.org"
++//#define textSecureCDNReflectorHost @"textsecure-service-reflected.whispersystems.org"
+ 
+ //#else
+ //
