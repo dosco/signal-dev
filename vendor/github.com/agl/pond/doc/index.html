@@ -1,0 +1,222 @@
+---
+layout: default
+title: Pond
+---
+
+<p>(<i>Note: recent events have lead to these topics being in the news quite often in recent weeks. However, Pond is not a reaction to those events - it was started nearly a year ago.</i>)</p>
+
+<p>For secure, synchronous communication we have OTR and, when run over Tor, this is pretty good. But while we have secure asynchronous messaging in the form of PGP email, it's not forward secure and it gratuitously leaks traffic information. While a desire for forward secure PGP <a href="http://tools.ietf.org/html/draft-brown-pgp-pfs-03">is hardly new</a>, it still hasn't materialised in a widely usable manner.</p>
+
+<p>Additionally, email is used predominately for insecure communications (mailing lists, etc) and is useful because it allows previously unconnected people to communicate as long as a (public) email address is known to one party. But the flip side to this is that volume and spam are driving people to use centralised email services. These provide such huge benefits to the majority of email communication, so it's unlikely that this trend is going to reverse. But, even with PGP, these services are trusted with hugely valuable traffic information if any party uses them.</p>
+
+<p>So Pond is not email. Pond is forward secure, asynchronous messaging for the discerning. Pond messages are asynchronous, but are not a record; they expire automatically a week after they are received. Pond seeks to prevent leaking traffic information against everyone except a global passive attacker.</p>
+
+<p><b>Dear God, please don't use Pond for anything real yet. I've hammered out nearly 20K lines of code that have never been reviewed. Unless you're looking to experiment you should go use something that <a href="http://gnupg.org/">actually works</a>.</b></p>
+
+<p>Please email any feedback to <tt>agl at imperialviolet dot org</tt> or else use GitHub's tools.</p>
+
+<p>&nbsp;</p>
+
+<p>
+  <span style="border: grey 3px solid; border-radius: 5px; padding: 8px;"><a href="user.html">User Guide</a> (<a href="user-cli.html">for CLI</a>)</span>
+  <a style="border: grey 3px solid; border-radius: 5px; padding: 8px;" href="threat.html">Threat Model</a>
+  <a style="border: grey 3px solid; border-radius: 5px; padding: 8px;" href="tech.html">Technical Details</a>
+  <a style="border: grey 3px solid; border-radius: 5px; padding: 8px;" href="https://github.com/agl/pond">Source Code</a>
+</p>
+
+<p>&nbsp;</p>
+
+<h4>Building</h4>
+
+<p>These are very simple build instructions that will get Pond running from source. You should read the commands before running them because, if nothing else, it'll put your GOPATH in <tt>~/gopkg</tt>, which may not be where you want.</p>
+
+<h5>Ubuntu 13.10</h5>
+
+<p>First, <a href="https://golang.org/doc/install">install Go</a>. The packaged version of Go (usually called <tt>golang</tt>) is unlikely to work.</p>
+
+<pre>sudo apt-get install git libgtk-3-dev libgtkspell3-3-dev libtspi-dev trousers tor mercurial tpm-tools
+cd
+mkdir gopkg
+export GOPATH=$HOME/gopkg
+go get github.com/agl/pond/client
+$GOPATH/bin/client</pre>
+
+<h5>Debian Wheezy and Ubuntu 12.04</h5>
+
+<p>Same as Ubuntu, above, but 1) on the <tt>go get</tt> command line add <tt>-tags ubuntu</tt> before the URL and 2) the gtkspell package is called <tt>libgtkspell-3-dev</tt>. On more recent versions of Debian, the instructions should be exactly the same as Ubuntu.</p>
+
+<h5>Tails (Version 1.1.1)</h5>
+
+<p>First, if you have not done so already, configure Tails persistence (<em>Applications</em> &rarr; <em>Tails</em> &rarr; <em>Configure persistent volume</em>) to persist "Personal Data", "APT Packages", "APT Lists", and "Dotfiles". A reboot is required after these settings are changed.</p>
+
+<p>Next, when starting Tails, click "Yes" at the "More options?" prompt to set an Administration password. You'll need this password to install Pond's dependencies.</p>
+
+<p>Next, open a Terminal and copy and paste the following commands to build and install Pond:</p>
+
+<pre>echo 'export GOPATH=$HOME/Persistent/go/' &gt;&gt; ~/.bashrc
+. ~/.bashrc
+mkdir $GOPATH
+alias pond-build='sudo bash -c "sudo apt-get update &amp;&amp; \
+apt-get install -y -t testing golang &amp;&amp; \
+apt-get install -y gcc git mercurial libgtk-3-dev libgtkspell-3-dev libtspi-dev trousers" &amp;&amp; \
+go get -u -tags ubuntu github.com/agl/pond/client &amp;&amp; \
+echo "Success." || echo "Sorry, something went wrong."'
+alias pond-install-deps='sudo apt-get install libtspi1 libgtkspell-3-0'
+alias pond='$GOPATH/bin/client'
+alias pond-cli='$GOPATH/bin/client --cli'
+alias|grep pond &gt;&gt; ~/.bashrc
+pond-build</pre>
+
+<p>Finally, run the following command (if you have not previously done so) to add your <tt>~/.bashrc</tt> to the persistent storage:</p>
+<pre>cp ~/.bashrc /live/persistence/TailsData_unlocked/dotfiles/.bashrc</pre>
+
+<p>Each time you start Tails in the future, before you can run Pond, you'll just need to reinstall its runtime dependencies using the <tt>pond-install-deps</tt> command.</p>
+
+<p>At this point, you should be able to run Pond's graphical interface with the <tt>pond</tt> command, or run its command-line interface with the <tt>pond-cli</tt> command.</p>
+
+<p>From time to time you can re-run the <tt>pond-build</tt> command to update to the latest version.</p>
+
+<h5>Fedora 19</h5>
+
+<p>Fedora's <tt>golang</tt> package appears to be completely broken, so this installs Go from source.</p>
+
+<pre>sudo yum install gtk3-devel gtkspell3-devel gcc trousers-devel git mercurial tor
+sudo systemctl start tor
+cd
+git clone https://github.com/golang/go
+cd go/src
+./all.bash
+cd
+export PATH=$PATH:$HOME/go/bin
+mkdir gopkg
+export GOPATH=$HOME/gopkg
+go get github.com/agl/pond/client
+$GOPATH/bin/client</pre>
+
+<h5>Arch</h5>
+<pre>
+yaourt -S trousers mercurial tor go
+cd
+mkdir gopkg
+export GOPATH=$HOME/gopkg
+go get github.com/agl/pond/client
+systemctl start tor.service
+$GOPATH/bin/client
+</pre>
+
+<p>In order to actually use the TPM, you'll need to <tt>systemctl start tcsd</tt>.</p>
+
+<h5>OS X</h5>
+
+<p>It's possible to get Pond building on OS X after spending <i>lots</i> of time with homebrew. Something that's known to have worked,</p>
+
+<pre>
+// You will require Tor to run Pond. If you do not already have it, you can get
+// it from https://www.torproject.org/download/download.html.en . Running the Tor
+// Browser Bundle is enough.
+
+// These instructions assume the use of the Homebrew package manager for OSX.
+// If you are already using macports or fink (competing package managers), you may
+// not be able to follow these instructions. If you are not using any of these and
+// need to install homebrew, you can find the instructions on doing so at
+// http://brew.sh/
+
+// Install prerequisites for running Pond
+brew install go gtk+3 gtkspell3 mercurial
+
+// You can either edit the GTK+ package build to use Quartz (the OS X graphics
+// library) directly, or install XQuartz, an X server with a Quartz backend.
+// XQuartz can be installed from http://xquartz.macosforge.org/. Otherwise:
+
+brew edit gtk+3
+
+// ... and then add --enable-quartz-backend to the configure arguments
+
+// Add your go environment variable settings
+export GOPATH=$HOME/gopkg
+export PATH=$PATH:$GOPATH/bin
+export PKG_CONFIG_PATH=/opt/X11/lib/pkgconfig:/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
+// You need to also add these to your ~/.profile file if you want to run pond again after reboot, unless you want to manually apply the settings each time you run pond.
+
+// Finally, install pond:
+go get github.com/agl/pond/client
+// now `client` should be in your path
+</pre>
+
+<p>However, unless you are already familiar with GTK development on OS X, I'd suggest using a Linux machine at this point. Since OS X development doesn't occur on my main development machine, I have to move patches across which also means that github doesn't always have the most up-to-date OS X changes.</p>
+
+<p>If you just want the CLI version of Pond, you can use the nogui tag like so:</p>
+
+<pre>
+brew install go
+export GOPATH=$HOME/gopkg
+export PATH=$PATH:$GOPATH/bin
+go get -tags nogui github.com/agl/pond/client
+alias pond="$GOPATH/bin/client"
+</pre>
+
+<p><i>WARNING</i>: there are no TPM chips in Macs and, since they generally use SSDs, which are log structured internally, messages cannot be safely erased. There is a firmware NVRAM on Macs that could be used for erasure storage, but I haven't written support for that yet.</p>
+
+<h4>Running a Pond server</h4>
+
+<p>Note: this documentation is included for completeness but most users are not expected to run their own servers. At this point in the development, things are still changing and one may need to observe the development in order to know when server updates are needed.</p>
+
+<h5>Go environment</h5>
+
+<p>Create a user called <tt>pond</tt> and make sure its go environment is setup:</p>
+
+<pre>export GOPATH=/home/pond/go
+export PATH=$PATH:$GOPATH/bin</pre>
+
+<h5>Create pond server identity</h5>
+
+<p>Note that the pond server logs to stdout.</p>
+
+<pre>
+% cd /home/pond
+% mkdir pond-server-base
+% server --init --base-directory /home/pond/pond-server-base
+2013/12/24 16:35:46 Started. Listening on port 16333 with identity FJPZWT4E6Y3BOYYXSLJII4EMZPFCU7CDL7DM3AZ4V65X4TGDKN6A
+</pre>
+
+<h5>Start pond server normally</h5>
+
+<pre>% cd /home/pond
+% server --base-directory /home/pond/pond-server-base
+2013/12/24 16:35:46 Started. Listening on port 16333 with identity FJPZWT4E6Y3BOYYXSLJII4EMZPFCU7CDL7DM3AZ4V65X4TGDKN6A</pre>
+
+<h5>Setup a Tor hidden service</h5>
+
+<p>Make a <tt>torrc</tt> for your hidden service, as in this snippet:</p>
+
+<pre>HiddenServiceDir /var/lib/tor/pond_server/
+HiddenServicePort 16333 127.0.0.1:16333</pre>
+
+Restart tor and then get your .onion addr:
+
+<pre>% service tor restart
+% cat /var/lib/tor/pond_server/hostname
+aj642zdpke4dzgf3.onion</pre>
+
+<h5>Construct Pond server URL</h5>
+
+<p>Construct your Pond server url like this: <tt>pondserver://</tt> + pond_server_id + <tt>@</tt> + onion_address. The example above would yield:</p>
+
+<pre>pondserver://FJPZWT4E6Y3BOYYXSLJII4EMZPFCU7CDL7DM3AZ4V65X4TGDKN6A@aj642zdpke4dzgf3.onion</pre>
+
+<h5>Running under <tt>systemd</tt></h5>
+
+<p>The Pond server doesn't fork into the background so <tt>systemd</tt> provides a nice way to run it as a service. Here's an example unit for doing so:</p>
+
+<pre>[Unit]
+Description=Pond
+After=network.target
+
+[Service]
+User=pond
+ExecStart=/home/pond/go/bin/server --base-directory /home/pond/pond-server-base
+StandardOutput=syslog
+StandardError=syslog
+
+[Install]
+WantedBy=multi-user.target</pre>

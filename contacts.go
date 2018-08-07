@@ -9,7 +9,7 @@ import (
 	"github.com/boltdb/bolt"
 )
 
-type Contact struct {
+type ContactTok struct {
 	Token      string `json:"token"`
 	Relay      string `json:"relay"`
 	SupportSMS bool   `json:"supportsSms"`
@@ -20,7 +20,7 @@ type ContactsReq struct {
 }
 
 type ContactsResp struct {
-	Contacts []Contact `json:"contacts"`
+	Contacts []ContactTok `json:"contacts"`
 }
 
 func directory(w http.ResponseWriter, req *http.Request) {
@@ -55,7 +55,7 @@ func directory(w http.ResponseWriter, req *http.Request) {
 			}
 			id := encodeNumber(string(tokHash))
 			if tx.Bucket(id) != nil {
-				cResp.Contacts = append(cResp.Contacts, Contact{Token: tok})
+				cResp.Contacts = append(cResp.Contacts, ContactTok{Token: tok})
 			}
 		}
 		return nil

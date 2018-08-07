@@ -1,0 +1,283 @@
+package protos;
+
+// This protocol buffer file defines the protocol between Pond clients and
+// servers, and between clients directly.
+
+// A client/server transaction always takes exactly the same form:
+// First, the client sends a request to the server which is padded to a fixed
+// length. Then the server sends the reply, which is also padded. Finally,
+// the client securely closes the connection, which is a small message that
+// carries no payload.
+
+// Request is the client's request to the server. Only one of the optional
+// messages may be present in any Request.
+message Request {
+	optional NewAccount new_account = 1;
+	optional Delivery deliver = 2;
+	optional Fetch fetch = 3;
+	optional Upload upload = 4;
+	optional Download download = 5;
+	optional SignedRevocation revocation = 6;
+	optional HMACSetup hmac_setup = 7;
+	optional HMACStrike hmac_strike = 8;
+}
+
+// Reply is the server's reply to the client.
+message Reply {
+	enum Status {
+		OK = 0;
+		PARSE_ERROR = 1;
+		NO_REQUEST = 2;
+		INTERNAL_ERROR = 3;
+
+		IDENTITY_ALREADY_KNOWN = 10;
+		OVERLOAD = 11;
+
+		NO_SUCH_ADDRESS = 12;
+		DELIVERY_SIGNATURE_INVALID = 13;
+		INCORRECT_GENERATION = 14;
+		MAILBOX_FULL = 15;
+
+		NO_ACCOUNT = 16;
+
+		OVER_QUOTA = 17;
+		FILE_LARGER_THAN_SIZE = 18;
+		FILE_COMPLETE = 19;
+
+		NO_SUCH_FILE = 20;
+		RESUME_PAST_END_OF_FILE = 21;
+
+		GENERATION_REVOKED = 22;
+
+		CANNOT_PARSE_REVOCATION = 23;
+		// REGISTRATION_DISABLED may be returned after a NewAccount
+		// request to indicate the the server doesn't accept new
+		// registrations.
+		REGISTRATION_DISABLED = 24;
+
+		// HMAC_KEY_ALREADY_SET is returned in reply to a HMACSetup
+		// request if a different HMAC key has already been setup.
+		HMAC_KEY_ALREADY_SET = 25;
+		// HMAC_NOT_SETUP results from a delivery attempt when the
+		// recipient hasn't configured an HMAC key.
+		HMAC_NOT_SETUP = 26;
+		// HMAC_INCORRECT results from a delivery when the HMAC of the
+		// one-time public key doesn't validate.
+		HMAC_INCORRECT = 27;
+		// HMAC_USED results from a delivery when the HMAC value has
+		// already been used.
+		HMAC_USED = 28;
+		// HMAC_REVOKED results from a delivery when the HMAC value has
+		// been marked as revoked.
+		HMAC_REVOKED = 29;
+	}
+	optional Status status = 1 [ default = OK ];
+
+	optional AccountCreated account_created = 2;
+	optional Fetched fetched = 3;
+	optional ServerAnnounce announce = 4;
+	optional UploadReply upload = 5;
+	optional DownloadReply download = 6;
+	optional SignedRevocation revocation = 7;
+	repeated SignedRevocation extra_revocations = 8;
+}
+
+// NewAccount is a request that the client may send to the server to request a
+// new account. The public identity of the connecting client will be the `name'
+// of the new account.
+message NewAccount {
+	// generation contains the revocation generation for the account. The
+	// client should pick it at random in order to hide the number of
+	// revocations that the client has performed.
+	required fixed32 generation = 1;
+	// group contains the serialised bbssig.Group for authenticating
+	// deliveries to this account.
+	required bytes group = 2;
+	// hmac_key contains an HMAC key used to authenticate delivery
+	// attempts.
+	optional bytes hmac_key = 3;
+}
+
+// AccountDetails contains the state of an account.
+message AccountDetails {
+	// queue is the number of messages waiting at the server.
+	required uint32 queue = 1;
+	// max_queue is the maximum number of messages that the server will
+	// queue for this account.
+	required uint32 max_queue = 2;
+}
+
+// AccountCreated is the reply to a NewAccount request.
+message AccountCreated {
+	required AccountDetails details = 1;
+}
+
+// Delivery is a request from a client to deliver a message to an account on
+// this server. There's no explicit reply protobuf for this request. Success is
+// indicated via |status|.
+message Delivery {
+	// The 32-byte, public identity of the target account.
+	required bytes to = 1;
+	// A group signature of |message| proving authorisation to deliver
+	// messages to the account.
+	optional bytes group_signature = 2;
+	// The current generation number in order for the server to send
+	// revocation updates.
+	optional fixed32 generation = 3;
+	// The padded message to deliver.
+	required bytes message = 4;
+	// one_time_public_key contains an Ed25519 public key that was issued
+	// by the recipient in order to authenticate delivery attempts.
+	optional bytes one_time_public_key = 5;
+	// hmac_of_public_key contains a 63-bit HMAC of public key using the
+	// HMAC key known to server and recipient.
+	optional fixed64 hmac_of_public_key = 6;
+	// one_time_signature contains a signature, by public_key, of message.
+	optional bytes one_time_signature = 7;
+}
+
+// Fetch is a request to fetch a message. It may result in either a Fetched, or
+// ServerAnnounce message. (Or none at all if no messages are pending.)
+message Fetch {
+}
+
+// Fetched is the reply to a Fetch request if the server has a message for
+// delivery.
+message Fetched {
+	// group_signature is the group signature presented by the sender.
+	required bytes group_signature = 1;
+	// generation is the generation number used for delivery.
+	required fixed32 generation = 2;
+	required bytes message = 3;
+	required AccountDetails details = 4;
+}
+
+// ServerAnnounce is a special type of reply to a Fetch request. The message
+// comes from the server, rather than from another client and it's intended to
+// be used for announcements from the server operator to all or some users.
+message ServerAnnounce {
+	required Message message = 1;
+}
+
+message Upload {
+	required fixed64 id = 1;
+	required int64 size = 2;
+}
+
+message UploadReply {
+	optional int64 resume = 1;
+}
+
+message Download {
+	required bytes from = 1;
+	required fixed64 id = 2;
+	optional int64 resume = 3;
+}
+
+message DownloadReply {
+	required int64 size = 1;
+}
+
+// SignedRevocation is a request for the server to store an update to the group
+// public key that revokes some sender. The server will reply with a revocation
+// for generation x when a delivery to that generation is requested.
+message SignedRevocation {
+	message Revocation {
+		required fixed32 generation = 1;
+		required bytes revocation = 2;
+	}
+	required Revocation revocation = 1;
+	required bytes signature = 2;
+}
+
+// HMACSetup can be sent by a client to establish an HMAC key if it didn't do
+// so at account creation time.
+message HMACSetup {
+	required bytes hmac_key = 1;
+}
+
+// HMACStrike is used by a client to record a number of HMAC values as used.
+message HMACStrike {
+	// hmacs contains a number of 63-bit HMACs. The MSB is used to signal
+	// whether the HMAC should be considered used (0) or revoked (1).
+	repeated fixed64 hmacs = 1 [packed = true];
+}
+
+// KeyExchange is a message sent between clients to establish a relation. It's
+// always found inside a SignedKeyExchange.
+message KeyExchange {
+	// Ed25519 public key.
+	required bytes public_key = 1;
+	// Curve25519 public key. (Used to tell the server which account to
+	// deliver a message to.)
+	// Note: in the most up-to-date revision of the Pond ratchet, this
+	// should be equal to |public_key|, modulo isomorphism.
+	required bytes identity_public = 2;
+	// The URL of this user's home server.
+	required string server = 3;
+	// A Curve25519, initial Diffie-Hellman value.
+	required bytes dh = 4;
+	// dh1 contains the second, curve25519, public key if the new-form
+	// ratchet is being used.
+	optional bytes dh1 = 8;
+	// A serialised bbssig.Group.
+	required bytes group = 5;
+	// A bbssig.PrivateKey to authorise message delivery.
+	required bytes group_key = 6;
+	// The generation number of |group|.
+	required uint32 generation = 7;
+}
+
+// A SignedKeyExchange is a message that's sent between clients and exposed in
+// the UI. It's typically found in a PEM block with type "POND KEY EXCHANGE".
+message SignedKeyExchange {
+	// signed contains a serialised KeyExchange message.
+	required bytes signed = 1;
+	// signature contains an Ed25519 signature of |signed| by
+	// |signed.public_key|.
+	required bytes signature = 2;
+}
+
+// Message is typically contained within a NaCl box that's passed between
+// clients using Delivery and Fetch.
+message Message {
+	// id is generated by the sender in order for the receiver to associate
+	// replies.
+	required fixed64 id = 1;
+	// time is the creation time of the message in epoch nanoseconds.
+	required int64 time = 2;
+	// body, after decoding, is a utf8 message.
+	required bytes body = 3;
+	enum Encoding {
+		RAW = 0;
+		GZIP = 1;
+	}
+	optional Encoding body_encoding = 4;
+	// my_next_dh contains a Curve25519 public value for future messages.
+	optional bytes my_next_dh = 5;
+	// in_reply_to, if set, contains the |id| value of a previous message
+	// sent by the recipient.
+	optional uint64 in_reply_to = 6;
+	// also_ack contains message ids for other messages that are also
+	// acknowledged by this message.
+	repeated uint64 also_ack = 10;
+
+	message Attachment {
+		required string filename = 1;
+		required bytes contents = 2;
+	}
+	message Detachment {
+		required string filename = 1;
+		required uint64 size = 2;
+		required uint64 padded_size = 3;
+		required uint32 chunk_size = 4;
+		required bytes key = 5;
+		optional string url = 6;
+	}
+	repeated Attachment files = 7;
+	repeated Detachment detached_files = 8;
+
+	// supported_version allows a client to advertise the maximum supported
+	// version that it speaks.
+	optional int32 supported_version = 9;
+}

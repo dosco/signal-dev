@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/sha1"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -46,9 +45,10 @@ func registerKeys(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "server error", 500)
 		return
 	}
+	log.Infof("%+v\n", preKeys)
+	log.Infof("%+v\n", body)
 
-	id := sha1.Sum([]byte(uname))
-
+	id := encodeNumber(uname)
 	writeDB(id[:], []byte("k"), body)
 	w.WriteHeader(200)
 }

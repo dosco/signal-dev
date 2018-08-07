@@ -1,0 +1,332 @@
+% TEMPLATE for Usenix papers, specifically to meet requirements of
+%  USENIX '05
+
+% See http://static.usenix.org/events/samples/template.la for examples.
+
+% Note that since 2010, USENIX does not require endnotes. If you want
+% foot of page notes, don't include the endnotes package in the 
+% usepackage command, below.
+
+%
+% This is a pre-publication paper which we intend to submit to FOCI-14
+% While the FOCI14 event has no home page, the previous one was:
+%   https://www.usenix.org/conference/foci13
+%
+
+\documentclass[letterpaper,twocolumn,10pt]{article}
+\usepackage{usenix,epsfig,amssymb,amsmath,url}
+\begin{document}
+\date{}
+
+\title{
+\Large \bf Going Dark: Phrase Automated Nym Discovery Authentication\\
+\small or,\\
+Finding friends and lovers using the PANDA protocol to re-nymber after everything is lost\\
+\small or, \\
+discovering new Pond users easily
+}
+
+\author{
+{\rm Jacob Appelbaum}\\
+\and
+{\rm another cypherpunk}\\
+}
+
+\maketitle
+
+% Use the following at camera-ready time to suppress page numbers.
+% Comment it out when you first submit the paper for review.
+\thispagestyle{empty}
+
+\subsection*{Abstract}
+
+We consider the problem of two parties seeking to establish secure
+communications given {\it only} a shared secret.
+
+Communication between two parties relies on in-band and out-of-band methods
+when addressing identifiers change or when they are not yet known to the
+interested parties. We summarize similar problems and present a brief overview
+of previous attempts at solving the presented problems. Finally we propose a
+system, which we have implemented, by which a pair or a group of people or
+machines may derive new identifiers using only a password or shared key. Thus
+we remove the requirement that any other communication must occur before
+re-establishing entirely new identifiers.
+
+\section{Introduction}
+
+% we should rephrase this to not be so closely worded to the Abstract
+We propose a system by which a pair or a group of people or machines may derive
+new identifiers using only a password or shared key in a forward secret manner.
+Additionally, we propose using this shared secret as the basis for
+authentication, key exchange and as a discovery process for other identifiers.
+We have implemented the described system and describe the specifics of our
+implementation.
+
+\section{The context of modern communication systems}
+\label{sec:context}
+
+Modern communication systems are designed with intentional flaws such as
+CALEA\cite{CALEA} and with an adversaries that have budgets in the tens of
+billions of US dollars\cite{NSABUDGET}. Adversaries such as the NSA
+specifically attempt to sabatoge cryptographic projects\cite{BULLRUN} used in
+the creation of secure communications systems. The current global
+communications network allow for dragnet surveillance based on so-called {\it
+selectors} and even world leaders\cite{MERKELPHONE} are not exempt from such
+surveillance. Static identifiers such as telephone numbers, email addresses,
+hardware serial numbers and other unique identifiers ensure linkability across
+vast datasets as the core of selector based surveillance.
+% XXX: should we cite something about selector based surveillance? Perhaps?
+
+\section{An overview of similar problems and their respective solutions}
+
+Users face many similar discovery or re-discovery problems in common daily
+life. Usually these problems are resolved with a hybrid of social and
+centralized solutions where a third party is not treated as an adversary.
+
+\subsection{The telephone re-numbering problem}
+\label{renumber:telephone}
+
+Telephone numbers change for various reasons. After a new number or a new
+device with a new number is issued, a kind of discovery process is started
+whereby the party may start to use the new number exclusively. It is also
+possible that the old number will link to the new number or only release the
+new number as it has superseded the original number.
+
+Telephone numbers are generally not user selected but are rather issued by a
+central authority; so called vanity numbers may be selected for a fee from
+some operators.
+
+The process of renumbering a telephone is generally solved in five different
+ways. The first may come in the form of a message provided by the operator
+that discloses the new number and disconnects the caller after an automated
+message. The second is socially or through a publication of some kind;
+generally when two people meet a new number may be disclosed or when a known
+distribution point such as a newspaper begins to print new numbers. The third
+is through a party reading the caller information from their received call or
+SMS list or by reviewing their bill. The fourth is through
+misclosure\cite{kellycaine}, perhaps by a third party who may or may not be
+authorized to disclose this information. The fifth is through a central listing
+service of some kind, such as a phonebook, published by a network operator.
+
+\subsection{The social nickname re-naming problem}
+\label{rename:social-nickname}
+
+People generally have full legal names and names by which they are known
+socially. These full legal name mappings change through various legal means
+that are out of scope. Nicknames are commonly held names that otherwise have
+little or no legal status - when a party changes their nickname, they suffer
+from the same issues faced by telephone renumbering\ref{renumber:telephone}.
+Unlike telephone re-numbering, generally a person or group may pick any name
+they choose as a new nickname. Such new nicknames may collide and cause
+confusion though largely this may be irrelevant for a social group that has
+other social identifiers.
+
+\subsection{The nym renyming problem}
+
+Electronic identities generally suffer from the same issues as telephone
+renumbering\ref{renumber:telephone} and re-naming\ref{rename:social-nickname}
+with the additional complexity of not having a central authority or out-of-band
+communications methods by which to reconnect.
+
+\subsection{The problem created by data loss}
+\label{sec:problem}
+
+Systems are often stolen or compromised in a way that results in total
+dataloss for the user. In some cases the data may be compromised after a
+variable window of time and in such a window, automatically changing
+indentifiers may prevent full and on-going compromise of a pair-wise
+communications channel.
+
+\section{Gently Rockin' Zooko's Triangle}
+\label{sec:zooko}
+
+Zooko's Triangle\cite{zookostriangle} is generalized as having the choice
+between any two of the following three properties when designing a naming
+system: secure, decentralized and human-meaningful. In the original Domain Name
+System, a domain name is decentralized and human-meaningful. In
+Pond\cite{pond}, the addressing system properties are secure and decentralized.
+
+We propose that, for a brief window of time, users should have a way to
+change the chosen properties of the naming system.  We assert that trading the
+secure property for the human-meaningful property in the form of phrases may be
+a useful trade-off in a time limited, forward secure fashion.
+
+Furthermore, we note that Zooko's Triangle is missing an important qualifier,
+which is the passing of time and its relationship with each of the properties.
+
+\section{PANDA}
+
+The PANDA protocol uses EKE2, Diffie-Hellman, a pre-arranged meeting point and
+a slow memory intensive key derivation process.
+
+\subsection{EKE2}
+
+EKE2 is very similar to SPAKE2 but uses an ideal cipher to encrypt the
+Diffie-Hellman values rather than masking them with secret group elements. EKE2
+is used to go from a shared-secret to an ephemeral shared-key and then the
+KeyExchange messages are encrypted with that key and exchanged via the second
+meeting ID.
+
+\subsection{Diffie-Hellman}
+
+Our Diffie-Hellman group of choice is curve25519\cite{bernstein2006curve25519}
+which results in a 255-bit Diffie-Hellman value, which is larger than the
+128-bit block size of most ciphers.
+
+\subsection{Password Authenticated Key Exchange}
+
+This problem falls into the topic of Password Authenticated Key Exchange
+(PAKE), which is a well studied problem. The first PAKE, Encrypted Key Exchange
+(EKE), was described by Bellovin and Merritt\cite{bellovin1992encrypted} in
+1992. However, we have one additional requirement: that the protocol execute in
+a single round. We define a round as a message sent by each party
+simultaneously, thus a message in a given round cannot depend on any other
+message in the same round.  We are imposing this requirement as our meeting
+point may have very high latency and we have no way of assigning the labels
+`client' and `server' to our parties.  Many PAKE protocols implicitly assume
+that the parties can behave differently based on these labels (including the
+original EKE), but our parties have {\it only} a shared secret. An exchange of
+messages could be used to break this symmetry but the additional latency is
+undesirable.
+
+The authors are most familiar with Simple Password-Based Encrypted Key Exchange
+Protocols number two (SPAKE2)\cite{abdalla2005simple}, but SPAKE2 appears to be
+unsuitable because it masks Diffie-Hellman values with a mask value raised to
+the power of the password and requires different mask values for the two
+parties. Due to our symmetry requirement the two parties would have to use the
+same value mask. We have proven that the chosen computational Diffie Hellman
+(CCDH) problem from the SPAKE paper is equally strong when the two mask values
+are equal, however the mask values appear again in the security proof and it's
+not obvious how to patch that second hole.
+% XXX: This last sentence could use some rewording to make it clearer
+
+We have chosen to use Encrypted Key Exchange two
+(EKE2)\cite{bellare2000authenticated} as our PAKE. EKE2 is very similar to
+SPAKE2 but uses an ideal cipher to encrypt the Diffie-Hellman values rather
+then masking them with secret group elements.
+
+Using a typical block cipher mode would
+result in an attacker having a discomforting amount of control of the resulting
+plaintext. Using an Authenticated Encryption with Associated Data (AEAD) mode would give an attacker an authenticator which
+they could use to mount an offline, brute-force attack on the shared
+secret\footnote{The attacker may already be able to mount an offline,
+brute-force attack on the shared secret by using an identifier revealed to the
+meeting point. But we still don't want to give them another avenue for this
+attack in case a particular meeting point doesn't require that}. A wide-block
+construction like LIONESS\cite{anderson1996two} doesn't appear to be
+applicable because the 256-bit block is too small to split into usefully sized
+left and right parts for the Luby-Rackoff construction. Many other wide-block
+constructions have subsequently been proposed including
+EME\cite{halevi2004parallelizable}, CMC\cite{halevi2004parallelizable},
+XCB\cite{mcgrew2004extended}, HCTR\cite{wang2005hctr} and others. However, the
+area is a patent minefield.
+
+We instantiate the ideal-cipher for EKE2 with a 256-bit block
+Rijndael\cite{daemen2002design}. Although AES specified only a 128-bit block
+size, Rijndael was originally specified with 128, 192 and 256-bit block sizes.
+It's very uncommon to find an Rijndael implementation that implements a 256-bit
+block size but since performance isn't a concern and nor are side-channels, a
+custom, toy Rijndael implementation is sufficient.
+
+\subsection{Meeting points}
+
+We propose agreeing on a meeting point, such as an address or name of a
+centralized HTTP server, one hosted on a Tor Hidden
+Service\cite{Dingledine04tor:the}, or the use of a
+decentralized key value store system.
+
+Once we have established a meeting point, the two parties need to bootstrap
+their shared secret into a cryptographic key exchange and a more efficient
+method of communicating in the future.\footnote{For example, the parties may wish to
+exchange OpenPGP public keys and email addresses in a confidential and
+authentic fashion. As a further example, Pond users may discover the
+keys for their peers with such a system.}
+% add \cite for OpenPGP
+
+\subsection{Key and meeting point derivation}
+
+Each PANDA user computes a tag and a key as part of a key derivation process.
+This process utilizes scrypt\cite{scrypt} to slow brute force or
+even well chosen dictionary attacks.
+% XXX: We should describe this process in more detail
+
+\section{Key exchange details in practice with Pond}
+
+Pond supports two methods of key exchange. The first is manual: the
+KeyExchange messages are serialised with Privacy-enhanced Electronic Mail (PEM)\cite{pem} and the user is expected to
+exchange them with the intended contact, authentically and confidentially. For
+example, a pre-existing relationship with Pretty Good Privacy (PGP)\cite{pgp} or
+Off-The-Record (OTR)\cite{otr} keys could be used to bootstrap Pond.
+
+We implemented\cite{panda} the PANDA discovery technique for the
+Pond\cite{pond} messaging system as the second method of key exchange. PANDA
+allows a relationship to be established via a shared-secret. This works by
+using a {\it meeting point} which, currently, involves contacting a central
+HTTPS server over the Tor\cite{Dingledine04tor:the} network. The shared secret is processed with
+scrypt\cite{scrypt} into a key and two {\it meeting} IDs. The meeting point
+simply acts as a pinboard where messages can be posted to a given meeting ID.
+If a different message has already been posted to the same ID then it's
+returned. The meeting point only allows two different messages to exist for a
+given meeting ID until it's garbage collected (in about a week).
+
+\subsection{Pond key exchange details}
+
+The Pond key exchange between two users involves each creating a KeyExchange
+protobuf\cite{pondprotobufs}. Since Pond servers demand a group signature
+before accepting a message for delivery, there are no public Pond addresses
+that can be used to bootstrap a Pond relationship.  Rather we currently assume
+an external, confidential and authentic means for users to exchange KeyExchange
+messages.
+
+A Pond KeyExchange message contains a group member private key (which is why
+they need to be confidential), as well as the information needed to direct a
+message to a user: their home server address and the user's public identity at
+that server.  They also contain an Ed25519 key and the intent is that, in the
+future, users will be able to update their home servers by sending messages to
+each of their contacts. Group member revocations will also be signed by this
+key.
+
+\subsection{Adding entropy to a human-meaningfully memorable phrase}
+
+The shared secret itself can consist of a passphrase, a time, and a deck or two
+of cards. Since humans are poor at generating and remembering secrets, a deck
+of cards, shuffled and split in half, serves quite well. Decks of cards are also
+commonly available and don't have the downsides that bringing a mobile device
+to a meeting might have.
+
+Although the two halves of the deck are different, they are sufficient to
+define a common, canonical set of cards. For Pond, the cards are ordered and
+the canonical half is the one with the majority of the lowest numbered card. If
+both halves have the same number of the lowest numbered card then the next
+lowest is considered. If each half has exactly the same cards then both are
+canonical.
+
+A single deck of cards results in an approximately 49 bit shared secret and two
+decks is 100 bits. The stacks of cards are a problem to dispose of (unlike a
+memory, they can be obtained by dumpster diving) but they only need to be
+protected until the key exchange is complete. After that they are no longer
+sensitive.
+
+While we haven't implemented further entropy sources, we believe that many
+common household objects may also serve as a time limited entropy source. As an
+example, additional entropy could be added from other sources such as the state
+of a Rubik's cube or a similar object.
+
+\section{Conclusion}
+
+Our design allows a pair or a group of people to discover or rediscover
+each-other with knowledge of only a shared secret or human memorable
+passphrase with optional entropy sources. Additionally, we believe that it
+provides forward secrecy against attackers who wish to correlate names even
+after a full client compromise.
+
+\section*{Acknowledgements}
+
+We would like to thank Leif Ryge, Steve Weis, Ralf Philip-Weinmann, Julian
+Assange and other anonymous cypherpunks who contributed valuable feedback in
+the creation of this design.
+
+{\footnotesize \bibliographystyle{acm}
+\bibliography{bibliography}}
+
+\end{document}
