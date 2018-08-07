@@ -46,7 +46,7 @@ func main() {
 	backend1Formatter := logging.NewBackendFormatter(backend1, format)
 	logging.SetBackend(backend1Formatter)
 
-	db, err = bolt.Open("keys.db", 0600, nil)
+	db, err = bolt.Open("dev.db", 0600, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
