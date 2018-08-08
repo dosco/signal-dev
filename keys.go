@@ -18,10 +18,10 @@ type SignedKey struct {
 }
 
 type PreKeys struct {
-	signedPreKey  SignedKey `json:"signedKey"`
+	SignedPreKey  SignedKey `json:"signedKey"`
 	IdentityKey   string    `json:"identityKey`
 	LastResortKey Key       `json:"lastResortKey"`
-	Keys          []Key     `json:"keys"`
+	PreKeys       []Key     `json:"preKeys"`
 }
 
 func registerKeys(w http.ResponseWriter, req *http.Request) {
@@ -46,7 +46,7 @@ func registerKeys(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	log.Infof("%+v\n", preKeys)
-	log.Infof("%+v\n", body)
+	log.Infof("%s\n", body)
 
 	id := encodeNumber(uname)
 	writeDB(id[:], []byte("k"), body)

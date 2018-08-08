@@ -2,22 +2,10 @@
 
 
 [[projects]]
-  name = "github.com/agl/pond"
-  packages = ["client/disk","client/ratchet","client/tpm","protos"]
-  revision = "56cbfe668d8fe9eeff3f519c42e04bb8696478ae"
-  version = "v0.1.1"
-
-[[projects]]
   name = "github.com/boltdb/bolt"
   packages = ["."]
   revision = "2f1ce7a837dcb8da3ec595b1dac9d0632f0f99e8"
   version = "v1.3.1"
-
-[[projects]]
-  name = "github.com/golang/protobuf"
-  packages = ["proto"]
-  revision = "b4deda0973fb4c70b50d226b1af49f3da59f5265"
-  version = "v1.1.0"
 
 [[projects]]
   name = "github.com/gorilla/context"
@@ -39,12 +27,6 @@
 
 [[projects]]
   branch = "master"
-  name = "golang.org/x/crypto"
-  packages = ["curve25519","internal/subtle","nacl/secretbox","pbkdf2","poly1305","salsa20/salsa","scrypt"]
-  revision = "f027049dab0ad238e394a753dba2d14753473a04"
-
-[[projects]]
-  branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
   revision = "2be389f392cd91df245b41638f818a1c041f0c08"
@@ -52,6 +34,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "dd8e3e91487b3e9a2ff2cb372016c64a3f1f39d5db2ee7eac903a0de5fc49800"
+  inputs-digest = "14bda048867b3e0fe7455db2efe6869e8072efb48ef38673df12888274b8a716"
   solver-name = "gps-cdcl"
   solver-version = 1
